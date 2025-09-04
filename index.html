@@ -64,11 +64,23 @@
 
     /* Responsif */
     @media (max-width: 600px) {
-      body { margin:10px; }
-      h2 {font-size: 25; font-weight: normal}
-      table, th, td { font-size:16px; font-weight: normal}
-      .saldo { font-size:16px; }
-      input, button { width:100%; box-sizing:border-box; }
+      body { margin:10px; align-items: center; }
+      h2 {font-size: 28; font-weight: normal; text-align: center;}
+      table, th, td { font-size:16px; font-weight: normal; text-align: center;}
+      .saldo {
+    font-size: 20px; /* lebih besar */
+    text-align: center;
+    width: 90%;
+  }
+       input, button {
+    width: 90%; /* lebih lebar */
+    font-size: 18px; /* teks lebih besar */
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  button {
+    border-radius: 25px; /* lebih rounded */
+  }
       .jelly { width:80px; height:80px; }
       .whale { width:150px; height:150px; }
     }
@@ -212,3 +224,4 @@ document.getElementById("targetDisplay").innerText = target.toLocaleString('id-I
   </script>
 </body>
 </html>
+
