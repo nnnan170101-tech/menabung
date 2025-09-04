@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>🐋 Tabungan Laut 🪼</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+    /* ===== FIXED BODY UNTUK CONFETTI ===== */
+    body {
+      font-family: "Fredoka One", cursive, sans-serif;
+      margin: 20px;
+      max-width: 750px;
+      color: #00334e;
+      position: relative;
+      overflow: visible; /* UBAH DARI overflow-x:hidden */
+      /* z-index dihapus */
+    }
+
+    h2 { text-align: center; color: rgb(207, 224, 237); text-shadow: 1px 1px #fff; }
+    input, button {
+      margin: 5px; padding: 10px; border-radius: 10px; border: 2px solid #4dd0e1;
+    }
+    button {
+      background: #a4defd; color: white; cursor: pointer; border: none;
+      font-weight: bold; border-radius: 20px; padding: 8px 14px;
+    }
+    button:hover { background: #0277bd; }
+    .saldo {
+      font-size: 20px; margin-top: 15px; padding: 12px;
+      background: #e1f5fecc; border: 2px dashed #0288d1; border-radius: 10px;
+      text-align: center;
+    }
+    .ucapan {
+      margin-top: 15px; padding: 12px; font-size: 18px;
+      font-weight: bold; color: #006064; text-align: center;
+      background: #b2ebf2cc; border-radius: 12px; display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
+    table {
+      border-collapse: collapse; width: 100%; margin-top: 20px;
+      background: #ffffffdd; border-radius: 10px; overflow: hidden;
+    }
+    th, td { border: 1px solid #81d4fa; padding: 8px; text-align: center; }
+    th { background: #0288d1; color: #fff; }
+    tr:nth-child(even) { background: #e1f5fe; }
+    .hapus-btn {
+      background: #ef5350; color: white; border: none;
+      border-radius: 6px; padding: 5px 10px; cursor: pointer;
+    }
+    .hapus-btn:hover { background: #d32f2f; }
+
+    /* Animasi tambahan (opsional) */
+    .jelly { position: absolute; top: 10%; left: 5%; width: 120px; height: 120px; z-index:2; }
+    .whale { position: absolute; bottom: 5%; right: 10%; width: 200px; height: 200px; z-index:2; }
+
+    /* Background animasi */
+    #bganimasi {
+      position: fixed; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:-1;
+    }
+
+    /* Responsif */
+    @media (max-width: 600px) {
+      body { margin:10px; }
+      h2 {font-size: 25; font-weight: normal}
+      table, th, td { font-size:16px; font-weight: normal}
+      .saldo { font-size:16px; }
+      input, button { width:100%; box-sizing:border-box; }
+      .jelly { width:80px; height:80px; }
+      .whale { width:150px; height:150px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background GIF/MP4 -->
+  <img id="bganimasi" src="WhalesUnderwaterGIF-WhalesUnderwaterAnimation-DiscoverShareGIFs-ezgif.com-rotate.gif" alt="Latar Laut">
+
+  <h2>🐋Tabungan Laut Mayu🐋</h2>
+
+  <input type="number" id="setoran" placeholder="" />
+  <button onclick="tambahSetoran()">💙</button>
+
+<div class="saldo">
+  Tabungan Terkumpul: <b><span id="saldo">0.0</span></b> / <span id="targetDisplay">4000000</span>
+</div>
+
+  <div class="ucapan" id="ucapanBox"></div>
+
+  <canvas id="grafik" height="100"></canvas>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tanggal</th>
+        <th>Tumpahan Koin</th>
+        <th>Edit</th>
+      </tr>
+    </thead>
+    <tbody id="daftar"></tbody>
+  </table>
+
+  <script>
+    // ===== Placeholder acak =====
+    const placeholders = [
+      "💵 Masukkan duit, biar ubur-ubur happy!",
+      "🐋 Setor sekarang, whale senang nanti!",
+      "🦑 Tabungan masuk = gelombang naik 🌊",
+      "💰 Masukkan nominal, lihat gelombang 🎉",
+      "🐠 Ikan kecil menari kalau kamu setor 💃",
+      "✨Tambah koin, bikin laut bersinar ✨",
+      "🌊 Setor sedikit atau banyak, semua seru!",
+      "🐙 Tentakel ikut bersorak kalau tabungan nambah!",
+      "🦈 Hiu pun terpesona sama tabunganmu!",
+      "🐡 Koin masuk, gelembung naik!",
+      "🐳 Whale bilang: “Wooshhh, makin banyak!”",
+      "🌟 Tabungan naik, karang ikut bersinar!",
+      "💦Laut riang, koin menari!"
+    ];
+    document.getElementById("setoran").placeholder = placeholders[Math.floor(Math.random() * placeholders.length)];
+
+    // ===== Tabungan =====
+    const target = 4000000;
+    let data = JSON.parse(localStorage.getItem("tabunganLaut")) || [];
+
+    const ucapanList = [
+      "💦 Ubur-ubur goyang seneng kamu nabung!",
+      "🐋 Whale semprotkan air: wooshhh semangat nabung!",
+      "🐠 Ikan-ikan kecil menari di sekitarmu 🎶",
+      "🌊 Nabungmu bikin laut makin indah!",
+      "🐚 Karang-karang ikut bersinar karena semangatmu ✨"
+    ];
+
+    let ctx = document.getElementById("grafik").getContext("2d");
+    let chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels: ["💙 Terkumpul","🤍 Sisa"], datasets:[{data:[0,target], backgroundColor:["#0288d1","#e1f5fe"]}] },
+      options:{ responsive:true, plugins:{legend:{position:'bottom', labels:{font:{size:14}}}}}
+    });
+
+    function render() {
+      let tbody = document.getElementById("daftar");
+      let saldo = 0;
+      tbody.innerHTML = "";
+      data.forEach((d,index)=>{
+        tbody.innerHTML += `<tr>
+          <td>${d.tanggal}</td>
+          <td>${d.nominal.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}</td>
+          <td><button class="hapus-btn" onclick="hapusSetoran(${index})">Hapus</button></td>
+        </tr>`;
+        saldo += d.nominal;
+      });
+document.getElementById("targetDisplay").innerText = target.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+      chart.data.datasets[0].data = [saldo, Math.max(target-saldo,0)];
+      chart.update();
+      localStorage.setItem("tabunganLaut", JSON.stringify(data));
+      if(saldo >= target){
+        showUcapan("🐋🎉 Wooshhh! Whale party, tabungan penuh!");
+        semburanConfetti(true);
+      }
+    }
+
+    function tambahSetoran(){
+      let nominal = parseInt(document.getElementById("setoran").value);
+      if(!nominal) return;
+      let today = new Date().toLocaleDateString("id-ID");
+      data.push({nominal,tanggal:today});
+      render();
+      showUcapan(ucapanList[Math.floor(Math.random()*ucapanList.length)]);
+      semburanConfetti();
+      document.getElementById("setoran").value = "";
+    }
+
+    function hapusSetoran(index){
+      if(confirm("Apakah kamu yakin mau menghapus setoran ini? 🌊")){
+        data.splice(index,1);
+        render();
+      }
+    }
+
+    function showUcapan(text){
+      let box = document.getElementById("ucapanBox");
+      box.innerText = text;
+      box.style.display = "block";
+      setTimeout(()=>{box.style.display="none";},4000);
+    }
+
+    function semburanConfetti(full=false){
+      let duration = full?4000:2000;
+      let end = Date.now()+duration;
+      (function frame(){
+        confetti({
+          particleCount: full?15:8,
+          startVelocity: full?60:40,
+          spread: full?70:40,
+          angle:270,
+          origin:{x:0.5,y:1},
+          colors:["#0288d1","#4dd0e1","#81d4fa","#ffffff"]
+        });
+        if(Date.now()<end){ requestAnimationFrame(frame); }
+      })();
+    }
+
+    document.getElementById("setoran").addEventListener("keyup",function(event){
+      if(event.key==="Enter"){ tambahSetoran(); }
+    });
+
+    render();
+  </script>
+</body>
+</html>
